@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>React + Spring</title>
+</head>
+<body>
+<div id='root'></div>
+
+<script src="https://fb.me/react-15.0.1.js"></script>
+<script src="https://fb.me/react-dom-15.0.1.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.23/browser.min.js"></script>
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+
+
+<script type="text/babel">
+    var App = React.createClass({
+
+        loadEmployeesFromServer: function () {
+            var self = this;
+            $.ajax({
+                url: "http://localhost:8080/entity/repository/"
+            }).then(function (data) {
+                self.setState({entities: data});
+            });
+        },
+        updateEntities: function (data) {
+            this.setState({entities: data});
+        },
+
+        getInitialState: function () {
+            return {entities: []};
+        },
+
+        componentDidMount: function () {
+            this.loadEmployeesFromServer();
+        },
+
+        render() {
+            return (
+                <div><Entities entities={this.state.entities}/> <Reload updateEntities={this.updateEntities}/></div>);
+        }
+    });
+
+    var Entities = React.createClass({
+        component: function () {
+            var self = this;
+            this.setState({entities: self.props.entities});
+        },
+        render: function () {
+            return (
+                <label>PROPS: {this.props.entities}</label>
+            )
+        }
+    });
+
+
+    var Reload = React.createClass({
+        getInitialState() {
+            return {
+                count: 0
+            };
+        },
+        countUp: function () {
+            this.setState({count: this.state.count + 1});
+            this.props.updateEntities(this.state.count);
+        },
+
+        render: function () {
+            return (
+                <button onClick={() => this.countUp()}>reload</button>
+            )
+        }
+    });
+
+
+    ReactDOM.render(<App/>, document.getElementById('root'));
+
+
+</script>
+
+</body>
+</html>
