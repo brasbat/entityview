@@ -9,7 +9,11 @@
     "react-dom": "^16.8.6",
     "react-router-dom": "4.3.1",
     "react-scripts": "2.1.8",
-    "reactstrap": "6.5.0"
+    "reactstrap": "6.5.0",
+    "jquery": "3.4.0",
+    "popper.js": "1.15.0",
+    "axios": "0.18.0",
+    "font-awesome": "^4.7.0"
   },
   "scripts": {
     "start": "react-scripts start",
@@ -25,5 +29,6 @@
     "not dead",
     "not ie <= 11",
     "not op_mini all"
-  ]
+  ],
+  "homepage": "./entity"
 }
