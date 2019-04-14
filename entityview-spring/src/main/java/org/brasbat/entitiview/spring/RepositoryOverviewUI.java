@@ -8,6 +8,9 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import com.vaadin.flow.component.page.LoadingIndicatorConfiguration;
+import com.vaadin.flow.server.InitialPageSettings;
+import com.vaadin.flow.server.PageConfigurator;
 import org.apache.commons.collections.IteratorUtils;
 import org.springframework.beans.factory.ListableBeanFactory;
 import org.springframework.data.repository.CrudRepository;
@@ -33,12 +36,29 @@ import com.vaadin.flow.theme.lumo.Lumo;
 @UIScope
 @SpringComponent
 @Theme(value = Lumo.class, variant = Lumo.DARK)
-public class RepositoryOverviewUI extends VerticalLayout
+public class RepositoryOverviewUI extends VerticalLayout implements PageConfigurator
 {
     private Map<Class<?>, CrudRepository> entityToRepoMap;
     private VerticalLayout layout = new VerticalLayout();
     private VerticalLayout mainContent = new VerticalLayout();
 
+
+        @Override
+        public void configurePage(InitialPageSettings settings) {
+            LoadingIndicatorConfiguration conf = settings.getLoadingIndicatorConfiguration();
+
+            /*
+             * Delay for showing the indicator and setting the 'first' class name.
+             */
+            conf.setFirstDelay(0); // 300ms is the default
+
+            /* Delay for setting the 'second' class name */
+            conf.setSecondDelay(1500); // 1500ms is the default
+
+            /* Delay for setting the 'third' class name */
+            conf.setThirdDelay(5000); // 5000ms is the default
+
+        }
     public RepositoryOverviewUI(ListableBeanFactory listableBeanFactory)
     {
     	this.setSizeFull();
@@ -67,12 +87,20 @@ public class RepositoryOverviewUI extends VerticalLayout
         });
         layout.setSizeFull();
         mainContent.setSizeFull();
+        try
+        {
+            Thread.sleep(2000);
+        } catch (InterruptedException e)
+        {
+            e.printStackTrace();
+        }
         layout.add(new Html("<h3>Get a simple access to your entities configured in your spring-boot project"), listBox, mainContent);
         this.add(layout);
     }
 
     private void setCrudForEntity(Class<?> entityClass, Repository repo)
     {
+
         mainContent.removeAll();
         mainContent.add(new Html("<h4>" + entityClass.getSimpleName() + " (" + entityClass.getName() + ")</h4>"));
         if (repo instanceof CrudRepository)

@@ -8,6 +8,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.web.servlet.ServletRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
@@ -46,21 +47,7 @@ public class EntityViewAutoConfiguration
 			}
 		}, "/frontend/*");
 		bean.setLoadOnStartup(1);
+
 		return bean;
 	}
-
-//	@Bean
-//	public SimpleUrlHandlerMapping vaadinRootMapping(@Value("${vaadin.urlMapping}") String rootPath) {
-//		SimpleUrlHandlerMapping mapping = new SimpleUrlHandlerMapping();
-//		mapping.setOrder(2147483647);
-//		mapping.setUrlMap(Collections.singletonMap(rootPath, this.vaadinForwardingController()));
-//		return mapping;
-//	}
-//
-//	@Bean
-//	public Controller vaadinForwardingController() {
-//		ServletForwardingController controller = new ServletForwardingController();
-//		controller.setServletName(ClassUtils.getShortNameAsProperty(SpringServlet.class));
-//		return controller;
-//	}
 }
