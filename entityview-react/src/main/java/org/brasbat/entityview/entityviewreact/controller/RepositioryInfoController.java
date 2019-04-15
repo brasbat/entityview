@@ -8,6 +8,9 @@ import org.springframework.data.repository.support.Repositories;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.PostConstruct;
+import javax.persistence.Id;
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -74,20 +77,82 @@ public class RepositioryInfoController
         if (repository instanceof CrudRepository)
         {
             CrudRepository crudRepository = (CrudRepository) repository;
-//            List collect =
             List list = IteratorUtils.toList(crudRepository.findAll().iterator());
             List result = new ArrayList();
             list.forEach(e -> result.add(entityClass.cast(e)));
-            return new DataResponse(columns, result);
+            DataResponse dataResponse = new DataResponse(columns, result);
+            assignColumnTypeMap(entityClass, dataResponse);
+            assignEnumInfo(entityClass, dataResponse);
+            return dataResponse;
 
         }
         throw new Exception("Entity has no CrudRepository");
+    }
+
+    private static void assignColumnTypeMap(Class<?> entityClass, DataResponse response)
+    {
+        Map<String, String> result = new HashMap<>();
+        for (Field f : entityClass.getDeclaredFields())
+        {
+            String name = f.getName();
+            Class<?> type = f.getType();
+            if (type.isEnum())
+            {
+                result.put(name, "enum");
+            } else
+            {
+                result.put(name, type.getSimpleName().toLowerCase());
+            }
+            if (f.getAnnotation(Id.class) != null)
+            {
+                response.setIdColumn(name);
+            }
+        }
+        response.setColumnToColumnTypeMap(result);
+    }
+
+    private static void assignEnumInfo(Class<?> entityClass, DataResponse response)
+    {
+        Map<String, List<String>> result = new HashMap<>();
+
+        for (Field f : entityClass.getDeclaredFields())
+        {
+            String name = f.getName();
+            Class<?> type = f.getType();
+            if (type.isEnum())
+            {
+                try
+                {
+                    Enum[] enumValues = getEnumValues(type);
+                    result.put(name, Arrays.stream(enumValues).map(e -> e.name()).collect(Collectors.toList()));
+
+                } catch (IllegalAccessException | NoSuchFieldException e)
+                {
+                    e.printStackTrace();
+                }
+            }
+        }
+        response.setEnumColumnToValuesMap(result);
+    }
+
+    private static <E extends Enum> E[] getEnumValues(Class<?> enumClass)
+            throws NoSuchFieldException, IllegalAccessException
+    {
+        Field f = enumClass.getDeclaredField("$VALUES");
+        System.out.println(f);
+        System.out.println(Modifier.toString(f.getModifiers()));
+        f.setAccessible(true);
+        Object o = f.get(null);
+        return (E[]) o;
     }
 
     class DataResponse
     {
         List<String> columns;
         List content;
+        String idColumn;
+        Map<String, List<String>> enumColumnToValuesMap;
+        Map<String, String> columnToColumnTypeMap;
 
         public DataResponse(List<String> columns, List content)
         {
@@ -113,6 +178,36 @@ public class RepositioryInfoController
         public void setContent(List content)
         {
             this.content = content;
+        }
+
+        public String getIdColumn()
+        {
+            return idColumn;
+        }
+
+        public void setIdColumn(String idColumn)
+        {
+            this.idColumn = idColumn;
+        }
+
+        public Map<String, List<String>> getEnumColumnToValuesMap()
+        {
+            return enumColumnToValuesMap;
+        }
+
+        public void setEnumColumnToValuesMap(Map<String, List<String>> enumColumnToValuesMap)
+        {
+            this.enumColumnToValuesMap = enumColumnToValuesMap;
+        }
+
+        public Map<String, String> getColumnToColumnTypeMap()
+        {
+            return columnToColumnTypeMap;
+        }
+
+        public void setColumnToColumnTypeMap(Map<String, String> columnToColumnTypeMap)
+        {
+            this.columnToColumnTypeMap = columnToColumnTypeMap;
         }
     }
 }

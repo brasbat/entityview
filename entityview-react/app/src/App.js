@@ -47,7 +47,7 @@ class EditModal extends Component {
         this.setState({name: data.name, data: data.selectedData, show: data.show})
     }
     handleClose = () => {
-        this.setState({ show: false });
+        this.setState({show: false});
     }
 
     render() {
@@ -56,7 +56,7 @@ class EditModal extends Component {
                 <Modal.Header closeButton>
                     <Modal.Title>Edit {this.state.name}</Modal.Title>
                 </Modal.Header>
-                <Modal.Body>You're about to edit<br />{JSON.stringify(this.state.data)}</Modal.Body>
+                <Modal.Body>You're about to edit<br/>{JSON.stringify(this.state.data)}</Modal.Body>
                 <Modal.Footer>
                     <Button variant="secondary" onClick={this.handleClose}>
                         Cancel
@@ -76,7 +76,7 @@ class EntityChooser extends Component {
         this.state = {entities: []};
     }
 
-    componentDidMount() {
+    componentWillMount() {
         axios
             .get("http://localhost:8080/entity/repository/")
             .then(response => {
@@ -123,63 +123,81 @@ class EntityTable extends Component {
                     entity: name,
                     columns: response.data.columns,
                     entityData: response.data.content,
+                    enumValues: response.data.enumColumnToValuesMap,
+                    idColumn: response.data.idColumn,
+                    columnTypeMap: response.data.columnToColumnTypeMap,
                     isLoading: false
                 })
             })
     }
 
-    render() {
-        let body;
-        if (this.state.columns == null) {
-            body = (<label>Please choose an entity from dropdown first</label>)
-        } else {
-            body = (
+    renderColumnValue(value, column) {
+        let type = this.state.columnTypeMap[column]
+        switch (type) {
+            case "boolean":
+                return (
+                    <div className="custom-control custom-checkbox"><input type="checkbox"
+                                                                           className="custom-control-input" checked={value}
+                                                                           disabled /></div>
+            );
+            default:
+            return value + "";
+            }
+            }
+
+            render() {
+                let body;
+                if (this.state.columns == null) {
+                body = (<label>Please choose an entity from dropdown first</label>)
+            } else {
+                body = (
                 <div height="100%">
-                    <EditModal ref={this.editRef}/>
+                <EditModal ref={this.editRef}/>
 
-                    <table className="table table-bordered table-hover table-sm">
-                        <tr>
-                            {this.state.columns.map((d) => <th>{d}</th>)}
-                            <th className="text-center fit">
-                                <span className="fa fa-tasks"></span>
-                            </th>
-                        </tr>
-                        <tbody>
-                        {this.state.entityData.map((row) =>
-                            <tr>
-                                {this.state.columns.map((columnName) => <td>{row[columnName] + ""}</td>)}
-                                <td className="text-center fit">
-                                    <div className="btn-group" role="group" aria-label="Edit section">
-                                        <button type="button" className="btn btn-outline-primary"
-                                                onClick={() => this.editRef.current.update({
-                                                    selectedData: row,
-                                                    name: this.state.entity,
-                                                    show:true
-                                                })}><span
-                                            className="fa fa-pencil"></span></button>
-                                        <button type="button" className="btn btn-outline-danger"><span
-                                            className="fa fa-trash"></span></button>
-                                    </div>
-                                </td>
-                            </tr>)}
-                        </tbody>
-                    </table>
+                <table className="table table-bordered table-hover table-sm">
+                <tr>
+                {this.state.columns.map((d) => <th>{d}</th>)}
+                <th className="text-center fit">
+                <span className="fa fa-tasks"></span>
+                </th>
+                </tr>
+                <tbody>
+                {this.state.entityData.map((row) =>
+                    <tr>
+                        {this.state.columns.map((columnName) =>
+                            <td>{this.renderColumnValue(row[columnName], columnName)}</td>)}
+                        <td className="text-center fit">
+                            <div className="btn-group" role="group" aria-label="Edit section">
+                                <button type="button" className="btn btn-outline-primary"
+                                        onClick={() => this.editRef.current.update({
+                                            selectedData: row,
+                                            name: this.state.entity,
+                                            show: true
+                                        })}><span
+                                    className="fa fa-pencil"></span></button>
+                                <button type="button" className="btn btn-outline-danger"><span
+                                    className="fa fa-trash"></span></button>
+                            </div>
+                        </td>
+                    </tr>)}
+                </tbody>
+                </table>
                 </div>
-            )
-        }
+                )
+            }
 
-        return (
-            <div>
+                return (
+                <div>
                 <LoadingOverlay active={this.state.isLoading}
-                                spinner
-                                text={'Loading data for ' + this.state.entity + ' ...'}
-                                fadeSpeed={50}
+                spinner
+                text={'Loading data for ' + this.state.entity + ' ...'}
+                fadeSpeed={50}
                 >
-                    {body}
+                {body}
                 </LoadingOverlay>
-            </div>
-        )
-    }
-}
+                </div>
+                )
+            }
+            }
 
-export default App;
+            export default App;
