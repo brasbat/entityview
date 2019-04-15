@@ -5,7 +5,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 
 @Entity
-public class EmployeeTwo
+public class TestEntityTwo
 {
     private @Id
     @GeneratedValue
@@ -55,11 +55,11 @@ public class EmployeeTwo
 
     private int yearsTwo;
 
-    private EmployeeTwo()
+    private TestEntityTwo()
     {
     }
 
-    public EmployeeTwo(String name, int age, int years)
+    public TestEntityTwo(String name, int age, int years)
     {
         this.nameTwo = name;
         this.ageTwo = age;

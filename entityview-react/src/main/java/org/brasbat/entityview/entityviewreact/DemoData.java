@@ -1,7 +1,7 @@
 package org.brasbat.entityview.entityviewreact;
 
-import org.brasbat.entityview.entityviewreact.entity.Employee;
-import org.brasbat.entityview.entityviewreact.entity.EmployeeTwo;
+import org.brasbat.entityview.entityviewreact.entity.TestEntityOne;
+import org.brasbat.entityview.entityviewreact.entity.TestEntityTwo;
 import org.brasbat.entityview.entityviewreact.entity.TestColumnTypes;
 import org.brasbat.entityview.entityviewreact.entity.TestEnum;
 import org.brasbat.entityview.entityviewreact.repository.EmployeeRepository;
@@ -28,13 +28,13 @@ public class DemoData implements CommandLineRunner
     @Override
     public void run(String... args) throws Exception
     {
-        repo1.save(new Employee("E1", 10, 1));
-        repo1.save(new Employee("E2", 11, 2));
-        repo1.save(new Employee("E3", 12, 3));
+        repo1.save(new TestEntityOne("E1", 10, 1));
+        repo1.save(new TestEntityOne("E2", 11, 2));
+        repo1.save(new TestEntityOne("E3", 12, 3));
 
         for (int i = 0; i < 1000; i++)
         {
-            repo2.save(new EmployeeTwo("E" + (i + 4), i, i + 1));
+            repo2.save(new TestEntityTwo("E" + (i + 4), i, i + 1));
 
         }
         for (int i = 0; i < 10; i++)

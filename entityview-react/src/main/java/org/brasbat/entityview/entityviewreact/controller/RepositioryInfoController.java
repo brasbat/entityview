@@ -16,7 +16,7 @@ import java.util.stream.Collectors;
 
 @CrossOrigin(origins = "http://localhost:3000")
 @RestController
-@RequestMapping("/entity/repository")
+@RequestMapping("/entity/api/repository")
 public class RepositioryInfoController
 {
     Repositories repositories;
@@ -60,7 +60,7 @@ public class RepositioryInfoController
         {
             throw new Exception("Entity [" + entityName + "] is unknown here");
         }
-        return Arrays.stream(entityClass.getDeclaredFields()).map(f -> f.getName()).collect(Collectors.toList());
+        return Arrays.stream(entityClass.getDeclaredFields()).map(Field::getName).collect(Collectors.toList());
     }
 
     @GetMapping("/data/{entityName}")
