@@ -1,11 +1,18 @@
 import React, {Component} from 'react';
 import './App.css';
+import 'react-widgets/dist/css/react-widgets.css';
 import axios from "axios";
 import LoadingOverlay from 'react-loading-overlay';
-import {Button, Col, Form, Modal, Row} from 'react-bootstrap';
-import Container from "react-bootstrap/Container";
+import {Button, Col, Container, Form, Modal, Navbar, Row} from 'react-bootstrap';
+import {DateTimePicker} from 'react-widgets'
+import Moment from 'moment'
+import momentLocalizer from 'react-widgets-moment';
+import ReactNotification from "react-notifications-component";
 
 const baseUrl = reactIsInDevelomentMode() ? "http://localhost:8080" : window.location.origin;
+
+Moment.locale('en');
+momentLocalizer();
 
 function reactIsInDevelomentMode() {
 	return '_self' in React.createElement('div');
@@ -27,17 +34,28 @@ class App extends Component {
 
 	render() {
 		return (
-				<div className="App ">
-					<nav className="navbar navbar-light bg-light">
-						<span className="navbar-brand mb-0 h1">Entity Viewer</span>
-					</nav>
+				<div>
+					<Navbar expand="lg" variant="dark" bg="dark">
+						<Navbar.Brand href="#">Entity Viewer</Navbar.Brand>
+					</Navbar>
+					<Container fluid={true}>
+						<Row className="p-3">
+							<Col>
+								<EntityChooser handler={this}/>
+							</Col>
+						</Row>
+						<Row className="p-3">
+							<Col>
+								<EntityTable ref={this.tableRef}/>
+							</Col>
+						</Row>
+					</Container>
 					<div className="container-fluid p-3">
-						<EntityChooser handler={this}/>
 					</div>
 					<div className="container-fluid p-3">
 
-						<EntityTable ref={this.tableRef}/>
 					</div>
+
 				</div>
 		);
 	}
@@ -47,19 +65,34 @@ class EditModal extends Component {
 	constructor(props) {
 		super(props);
 		this.state = {name: this.props.name, data: this.props.column, show: this.props.show, model: this.props.model};
-		// this.handleClose.bind(this);
+		this.addNotification = this.addNotification.bind(this);
+		this.notificationDOMRef = React.createRef();
 	}
 
 	update = function(data) {
-		this.setState({name: data.name, data: data.selectedData, enums: data.enumValues, columnTypes: data.columnTypes, show: data.show})
+		this.setState({name: data.name, data: data.selectedData, enums: data.enumValues, columnTypes: data.columnTypes, idColumn: data.idColumn, show: data.show, success: false})
 	}
 	handleClose = () => {
 		this.setState({show: false});
 	}
 
+	addNotification() {
+		this.notificationDOMRef.current.addNotification({
+			title: "Success",
+			message: "Saved Changes!",
+			type: "success",
+			insert: "top",
+			container: "top-center",
+			animationIn: ["animated", "fadeIn"],
+			animationOut: ["animated", "fadeOut"],
+			dismiss: {duration: 2000},
+			dismissable: {click: true}
+		});
+	}
+
 	renderBody(value, name, type) {
-		return (<Form.Group as={Row} controlId={name}>
-			<Form.Label column>
+		return (<Form.Group as={Row} controlId={"edit-" + name}>
+			<Form.Label size="sm" column>
 				{name}
 			</Form.Label>
 			<Col>
@@ -69,33 +102,36 @@ class EditModal extends Component {
 	}
 
 	renderInputForType(type, value, name) {
+		// name === this.state.idColumn;
 		switch (type) {
 			case "int":
 			case "long":
 			case "double":
 			case "float":
-				return (<Form.Control placeholder={name} defaultValue={value}/>);
+				return (<Form.Control readOnly={name === this.state.idColumn} placeholder={name} defaultValue={value}/>);
 			case "boolean":
-				return (<Form.Check type="checkbox" value={value} label={name}/>);
+				return (<Form.Check type="checkbox" defaultChecked={value}/>);
 			case "string":
 				return (
-						<textarea className="form-control rounded-5" rows="3" name={name}>
-							{value}
+
+						<textarea name={"edit-" + name} defaultValue={value} className="form-control rounded-5 resize" resize="both" rows="3" readOnly={name === this.state.idColumn}>
+
                         </textarea>);
 			case "date":
-				return (<Form.Control type="datetime-local" value={value} placeholder={name}/>);
+
+				// return (<Form.Control type="datetime-local" defaultValue={new Date(value)} placeholder={name} readOnly={name === this.state.idColumn}/>);
+				return (<DateTimePicker name={"edit-" + name} defaultValue={new Date(value)}/>);
+				//<DateTimePicker defaultValue={new Date()} />
 			case "enum":
 				return (
-						<Form.Control as="select">
-							{console.log(this.state.enums[name])}
+						<Form.Control as="select" defaultValue={value} readOnly={name === this.state.idColumn}>
 							{
-
 								this.state.enums[name].map((d) => <option key={"enum" + d} id={"enum" + d}>{d}</option>)}
 							}
 						</Form.Control>);
 			default:
 				return (
-						<textarea rows="3" cols={15} name={name}>
+						<textarea name={"edit-" + name} rows="3" cols={15} readOnly={name === this.state.idColumn}>
 							{JSON.stringify(value)}
                         </textarea>);
 		}
@@ -103,19 +139,38 @@ class EditModal extends Component {
 
 	handleSubmit = (event) => {
 		event.preventDefault();
+		let json = {};
+		console.log(Object.keys(this.state.columnTypes));
 		Object.keys(this.state.columnTypes).forEach((d, idx) =>
-				console.log(d + " : " + event.target.elements[d].value)
-	)
-		;
-		console.log(event.target.elements);
-	}
+				json[d] = event.target.elements["edit-" + d].value
+		);
+		console.log(json);
+		axios.post(baseUrl + "/entity/api/repository/data/" + this.state.name, json).then((response) => {
+			this.setState({success: true});
+			this.props.table.refresh();
+			this.handleClose();
+		})
+	};
 
 	render() {
 		if (this.state.data == null) {
 			return (<Container/>);
 		}
+		if (this.state.success) {
+			return (<ReactNotification ref={this.notificationDOMRef}
+				title = "Success"
+				message = "Saved Changes!"
+				type= "success"
+				insert= "top"
+				container= "top-center"
+				animationIn= {["animated", "fadeIn"]}
+				animationOut= {["animated", "fadeOut"]}
+				dismiss= {{duration: 2000}}
+				dismissable= {{click: true}}
+			/>);
+		}
 		return (
-				<Modal show={this.state.show} onHide={this.handleClose}>
+				<Modal size="lg" show={this.state.show} onHide={this.handleClose}>
 					<Form onSubmit={this.handleSubmit}>
 						<Modal.Header closeButton>
 							<Modal.Title>Edit {this.state.name}</Modal.Title>
@@ -129,7 +184,7 @@ class EditModal extends Component {
 							<Button variant="secondary" onClick={this.handleClose}>
 								Cancel
 							</Button>
-							<Button variant="primary" type="submit" onClick={this.handleClose}>
+							<Button variant="primary" type="submit">
 								Save
 							</Button>
 						</Modal.Footer>
@@ -182,7 +237,12 @@ class EntityTable extends Component {
 		this.state = {isLoading: false};
 		this.editRef = React.createRef();
 	}
-
+	refresh()
+	{
+		if(this.state.entity != null){
+			this.updateShownEntity(this.state.entity);
+		}
+	}
 	updateShownEntity(name) {
 		this.setState({isLoading: true, entity: name});
 		axios
@@ -198,7 +258,6 @@ class EntityTable extends Component {
 						columnTypeMap: response.data.columnToColumnTypeMap,
 						isLoading: false
 					});
-					console.log(this.state)
 				})
 	}
 
@@ -218,10 +277,10 @@ class EntityTable extends Component {
 		} else {
 			body = (
 					<div height="100%">
-						<EditModal key="editModal" ref={this.editRef}/>
+						<EditModal key="editModal" ref={this.editRef} table={this}/>
 
-						<table className="table table-bordered table-hover table-sm">
-							<tbody  >
+						<table className="table table-bordered table-hover table-sm tableFixHead">
+							<tbody>
 							<tr>
 								{this.state.columns.map((d) => <th>{d}</th>)}
 								<th className="text-center fit">
@@ -240,7 +299,8 @@ class EntityTable extends Component {
 													        name: self.state.entity,
 													        show: true,
 													        enumValues: self.state.enumValues,
-													        columnTypes: self.state.columnTypeMap
+													        columnTypes: self.state.columnTypeMap,
+													        idColumn: self.state.idColumn
 												        })}>
 													<span className="fa fa-pencil"></span></button>
 												<button type="button" className="btn btn-outline-danger"><span

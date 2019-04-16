@@ -2,6 +2,7 @@ package org.brasbat.entityview.entityviewreact.controller;
 
 import org.apache.commons.collections.IteratorUtils;
 import org.springframework.beans.factory.ListableBeanFactory;
+import org.springframework.boot.json.GsonJsonParser;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.data.repository.Repository;
 import org.springframework.data.repository.support.Repositories;
@@ -14,7 +15,10 @@ import java.lang.reflect.Modifier;
 import java.util.*;
 import java.util.stream.Collectors;
 
-@CrossOrigin(origins = "http://localhost:3000")
+import com.fasterxml.jackson.annotation.JsonAlias;
+import com.google.gson.Gson;
+
+@CrossOrigin(origins = "http://localhost:3000", methods = {RequestMethod.GET, RequestMethod.POST})
 @RestController
 @RequestMapping("/entity/api/repository")
 public class RepositioryInfoController
@@ -63,6 +67,21 @@ public class RepositioryInfoController
         return Arrays.stream(entityClass.getDeclaredFields()).map(Field::getName).collect(Collectors.toList());
     }
 
+	@PostMapping("/data/{entityName}")
+	public void save(@PathVariable String entityName, @RequestBody String newValue) throws Exception
+	{
+		System.out.println(newValue);
+		Class<?> entityClass = nameToEntityClassMap.get(entityName);
+		Gson g = new Gson();
+		Object o = g.fromJson(newValue, entityClass);
+		Optional<Object> repositoryFor = repositories.getRepositoryFor(entityClass);
+		Repository repository = (Repository) repositoryFor.get();
+		if (repository instanceof CrudRepository)
+		{
+			CrudRepository crudRepository = (CrudRepository) repository;
+			crudRepository.save(o);
+		}
+	}
     @GetMapping("/data/{entityName}")
     public DataResponse getEntityData(@PathVariable String entityName) throws Exception
     {
@@ -139,8 +158,6 @@ public class RepositioryInfoController
             throws NoSuchFieldException, IllegalAccessException
     {
         Field f = enumClass.getDeclaredField("$VALUES");
-        System.out.println(f);
-        System.out.println(Modifier.toString(f.getModifiers()));
         f.setAccessible(true);
         Object o = f.get(null);
         return (E[]) o;

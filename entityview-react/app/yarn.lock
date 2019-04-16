@@ -7715,6 +7715,11 @@ mkdirp@0.5.1, mkdirp@0.5.x, mkdirp@^0.5.0, mkdirp@^0.5.1, mkdirp@~0.5.0, mkdirp@
   dependencies:
     minimist "0.0.8"
 
+moment@^2.24.0:
+  version "2.24.0"
+  resolved "https://registry.yarnpkg.com/moment/-/moment-2.24.0.tgz#0d055d53f5052aa653c9f6eb68bb5d12bf5c2b5b"
+  integrity sha512-bV7f+6l2QigeBBZSM/6yTNq4P2fNpSWj/0e7jQcy87A8e7o2nAfP/34/2ky5Vw4B9S446EtIhodAzkFCcR4dQg==
+
 morgan@^1.9.0:
   version "1.9.1"
   resolved "https://registry.yarnpkg.com/morgan/-/morgan-1.9.1.tgz#0a8d16734a1d9afbc824b99df87e738e58e2da59"
@@ -9706,6 +9711,13 @@ react-native@^0.59.4:
     xmldoc "^0.4.0"
     yargs "^9.0.0"
 
+react-notifications-component@^1.1.1:
+  version "1.1.1"
+  resolved "https://registry.yarnpkg.com/react-notifications-component/-/react-notifications-component-1.1.1.tgz#8d1a557b2f7a5d8fb25b74d1855510ac0d26e1f1"
+  integrity sha512-YGd00pMFg5uqX9f6Zhdjweuxa5YZDwmxgkGRwXXVP3P/YJvPvziITGLBbLExlJPCATq3+S7DZBYtIpZW8BA7Ww==
+  dependencies:
+    react "^16.4.2"
+
 react-overlays@^1.2.0:
   version "1.2.0"
   resolved "https://registry.yarnpkg.com/react-overlays/-/react-overlays-1.2.0.tgz#205368eeb0a5fb0b7f9b717fa7a12d518500abdb"
@@ -9845,6 +9857,11 @@ react-transition-group@^2.3.1, react-transition-group@^2.4.0, react-transition-g
     prop-types "^15.6.2"
     react-lifecycles-compat "^3.0.4"
 
+react-widgets-moment@^4.0.26:
+  version "4.0.26"
+  resolved "https://registry.yarnpkg.com/react-widgets-moment/-/react-widgets-moment-4.0.26.tgz#8b792aa9c9e55c0d16ecf60bd8b0e1d52822b237"
+  integrity sha512-nmdxTrTXo7H40uZAGEhEpt7Xs5YjKd+poWfWlaSKE07Z1cFyxQCeOMshYUFA2p6vP1ieGeR52nr+C5GSPZ3ikA==
+
 react-widgets@^4.4.10:
   version "4.4.10"
   resolved "https://registry.yarnpkg.com/react-widgets/-/react-widgets-4.4.10.tgz#e752c57902421d333a5b702ad0d526b96691c998"
@@ -9872,7 +9889,7 @@ react@^15.3.0:
     object-assign "^4.1.0"
     prop-types "^15.5.10"
 
-react@^16.8.6:
+react@^16.4.2, react@^16.8.6:
   version "16.8.6"
   resolved "https://registry.yarnpkg.com/react/-/react-16.8.6.tgz#ad6c3a9614fd3a4e9ef51117f54d888da01f2bbe"
   integrity sha512-pC0uMkhLaHm11ZSJULfOBqV4tIZkx87ZLvbbQYunNixAAvjnC+snJCg0XQXn9VIsttVsbZP/H/ewzgsd5fxKXw==
