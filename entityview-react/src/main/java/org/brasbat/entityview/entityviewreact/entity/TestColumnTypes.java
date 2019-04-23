@@ -18,6 +18,7 @@ public class TestColumnTypes
     float floatCol;
     TestEnum testEnum;
     Date testDate;
+    TestObjectDto testNestedObject;
 
 
     public Long getId()
@@ -95,4 +96,24 @@ public class TestColumnTypes
     {
         this.floatCol = floatCol;
     }
+
+	public void setId(Long id)
+	{
+		this.id = id;
+	}
+
+	public boolean isBooleanCol()
+	{
+		return booleanCol;
+	}
+
+	public TestObjectDto getTestNestedObject()
+	{
+		return testNestedObject;
+	}
+
+	public void setTestNestedObject(TestObjectDto testNestedObject)
+	{
+		this.testNestedObject = testNestedObject;
+	}
 }

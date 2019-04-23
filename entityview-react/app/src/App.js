@@ -3,7 +3,7 @@ import './App.css';
 import 'react-widgets/dist/css/react-widgets.css';
 import axios from "axios";
 import LoadingOverlay from 'react-loading-overlay';
-import {Button, Col, Container, Form, Modal, Navbar, Row} from 'react-bootstrap';
+import {Button, Col, Container, Form, Modal, Navbar, Row, Table, Spinner, DropdownButton, Dropdown} from 'react-bootstrap';
 import {DateTimePicker} from 'react-widgets'
 import Moment from 'moment'
 import momentLocalizer from 'react-widgets-moment';
@@ -11,7 +11,7 @@ import ReactNotification from "react-notifications-component";
 
 const baseUrl = reactIsInDevelomentMode() ? "http://localhost:8080" : window.location.origin;
 
-Moment.locale('en');
+Moment.locale('de');
 momentLocalizer();
 
 function reactIsInDevelomentMode() {
@@ -110,29 +110,26 @@ class EditModal extends Component {
 			case "float":
 				return (<Form.Control readOnly={name === this.state.idColumn} placeholder={name} defaultValue={value}/>);
 			case "boolean":
-				return (<Form.Check type="checkbox" defaultChecked={value}/>);
+				return (<Form.Check className="custom-checkbox" type="checkbox" defaultChecked={value}/>);
 			case "string":
 				return (
 
 						<textarea name={"edit-" + name} defaultValue={value} className="form-control rounded-5 resize" resize="both" rows="3" readOnly={name === this.state.idColumn}>
-
                         </textarea>);
 			case "date":
-
 				// return (<Form.Control type="datetime-local" defaultValue={new Date(value)} placeholder={name} readOnly={name === this.state.idColumn}/>);
-				return (<DateTimePicker name={"edit-" + name} defaultValue={new Date(value)}/>);
+				return (<DateTimePicker name={"edit-" + name} defaultValue={new Date(value)} editFormat="YYYY-MM-DD HH:mm:ss" format="YYYY-MM-DDTHH:mm:ss.SSSZ"/>);
 				//<DateTimePicker defaultValue={new Date()} />
 			case "enum":
 				return (
-						<Form.Control as="select" defaultValue={value} readOnly={name === this.state.idColumn}>
+						<Form.Control as="select" className="custom-select" defaultValue={value} readOnly={name === this.state.idColumn}>
 							{
 								this.state.enums[name].map((d) => <option key={"enum" + d} id={"enum" + d}>{d}</option>)}
 							}
 						</Form.Control>);
 			default:
 				return (
-						<textarea name={"edit-" + name} rows="3" cols={15} readOnly={name === this.state.idColumn}>
-							{JSON.stringify(value)}
+						<textarea name={"edit-" + name} className="form-control rounded-5 resize" resize="both" rows="3" defaultValue={JSON.stringify(value)} readOnly={name === this.state.idColumn}>
                         </textarea>);
 		}
 	}
@@ -141,16 +138,44 @@ class EditModal extends Component {
 		event.preventDefault();
 		let json = {};
 		console.log(Object.keys(this.state.columnTypes));
-		Object.keys(this.state.columnTypes).forEach((d, idx) =>
-				json[d] = event.target.elements["edit-" + d].value
-		);
+		const self = this;
+		Object.keys(this.state.columnTypes).forEach(function(d, idx) {
+					let type = self.state.columnTypes[d];
+					switch (type) {
+						case "int":
+						case "long":
+						case "double":
+						case "float":
+						case "string":
+						case "date":
+						case "enum":
+							json[d] = event.target.elements["edit-" + d].value;
+							break;
+						case "boolean":
+							json[d] = event.target.elements["edit-" + d].checked;
+							break;
+						default:
+							json[d] = event.target.elements["edit-" + d].value;
+							try {
+								var obj = JSON.parse(event.target.elements["edit-" + d].value);
+								json[d] = obj;
+							} catch (e) {
+							}
+					}
+
+				},
+		)
+		;
 		console.log(json);
+		this.setState({saving: true});
 		axios.post(baseUrl + "/entity/api/repository/data/" + this.state.name, json).then((response) => {
 			this.setState({success: true});
 			this.props.table.refresh();
 			this.handleClose();
-		})
-	};
+		}).finally(
+				() => this.setState({saving: false}))
+
+	}
 
 	render() {
 		if (this.state.data == null) {
@@ -158,16 +183,29 @@ class EditModal extends Component {
 		}
 		if (this.state.success) {
 			return (<ReactNotification ref={this.notificationDOMRef}
-				title = "Success"
-				message = "Saved Changes!"
-				type= "success"
-				insert= "top"
-				container= "top-center"
-				animationIn= {["animated", "fadeIn"]}
-				animationOut= {["animated", "fadeOut"]}
-				dismiss= {{duration: 2000}}
-				dismissable= {{click: true}}
+			                           title="Success"
+			                           message="Saved Changes!"
+			                           type="success"
+			                           insert="top"
+			                           container="top-center"
+			                           animationIn={["animated", "fadeIn"]}
+			                           animationOut={["animated", "fadeOut"]}
+			                           dismiss={{duration: 2000}}
+			                           dismissable={{click: true}}
 			/>);
+		}
+		const {saving} = this.state;
+		let buttonContent;
+		if (saving) {
+			buttonContent = <><Spinner
+					as="span"
+					animation="border"
+					size="sm"
+					role="status"
+					aria-hidden="true"
+			/><span> Saving...</span></>;
+		} else {
+			buttonContent = <span>Save</span>;
 		}
 		return (
 				<Modal size="lg" show={this.state.show} onHide={this.handleClose}>
@@ -184,8 +222,8 @@ class EditModal extends Component {
 							<Button variant="secondary" onClick={this.handleClose}>
 								Cancel
 							</Button>
-							<Button variant="primary" type="submit">
-								Save
+							<Button variant="primary" type="submit" disabled={saving}>
+								{buttonContent}
 							</Button>
 						</Modal.Footer>
 					</Form>
@@ -194,10 +232,16 @@ class EditModal extends Component {
 	}
 }
 
-class EntityChooser extends Component {
+class EntityChooser
+		extends Component {
 	constructor(props) {
 		super(props);
-		this.state = {entities: []};
+		this.state = {entities: [], selected: "Choose Entity"};
+	}
+	handleSelection(name)
+	{
+		this.setState({selected: name});
+		this.props.handler.handleEntityChoosen(name)
 	}
 
 	componentWillMount() {
@@ -212,21 +256,18 @@ class EntityChooser extends Component {
 	render() {
 		var self = this;
 		return (
-				<div className="dropdown">
-					<button className="btn btn-default dropdown-toggle" type="button" id="entitiesDropdown"
-					        data-toggle="dropdown"
-					        aria-haspopup="true" aria-expanded="false">
-						Available Entities
-					</button>
-					<div className="dropdown-menu" aria-labelledby="entitiesDropdown">
-						{this.state.entities.map(function(d, idx) {
-							// eslint-disable-next-line
-							return (<a className="dropdown-item" key={d} id={d} href="#"
-							           onClick={() => self.props.handler.handleEntityChoosen(d)}>{d}</a>
-							)
-						})}
-					</div>
-				</div>
+
+				<DropdownButton id="dropdown-item-button" title={this.state.selected}>
+					{this.state.entities.map(function(d, idx) {
+						// eslint-disable-next-line
+						return (<Dropdown.Item as="button" key={d} id={d} href="#"
+						                       onClick={() => self.handleSelection(d)}>{d}</Dropdown.Item>
+						)
+					})}
+					{/*<Dropdown.Item as="button">Action</Dropdown.Item>*/}
+					{/*<Dropdown.Item as="button">Another action</Dropdown.Item>*/}
+					{/*<Dropdown.Item as="button">Something else</Dropdown.Item>*/}
+				</DropdownButton>
 		)
 	}
 }
@@ -237,12 +278,13 @@ class EntityTable extends Component {
 		this.state = {isLoading: false};
 		this.editRef = React.createRef();
 	}
-	refresh()
-	{
-		if(this.state.entity != null){
+
+	refresh() {
+		if (this.state.entity != null) {
 			this.updateShownEntity(this.state.entity);
 		}
 	}
+
 	updateShownEntity(name) {
 		this.setState({isLoading: true, entity: name});
 		axios
@@ -265,6 +307,11 @@ class EntityTable extends Component {
 		let type = this.state.columnTypeMap[column];
 		switch (type) {
 			default:
+				try {
+					return JSON.stringify(value);
+				} catch (e) {
+
+				}
 				return value + "";
 		}
 	}
@@ -279,7 +326,7 @@ class EntityTable extends Component {
 					<div height="100%">
 						<EditModal key="editModal" ref={this.editRef} table={this}/>
 
-						<table className="table table-bordered table-hover table-sm tableFixHead">
+						<Table bordered responsive hover size="sm" striped className="tableFixHead">
 							<tbody>
 							<tr>
 								{this.state.columns.map((d) => <th>{d}</th>)}
@@ -309,7 +356,7 @@ class EntityTable extends Component {
 										</td>
 									</tr>)}
 							</tbody>
-						</table>
+						</Table>
 					</div>
 			)
 		}

@@ -4,6 +4,7 @@ import org.brasbat.entityview.entityviewreact.entity.TestEntityOne;
 import org.brasbat.entityview.entityviewreact.entity.TestEntityTwo;
 import org.brasbat.entityview.entityviewreact.entity.TestColumnTypes;
 import org.brasbat.entityview.entityviewreact.entity.TestEnum;
+import org.brasbat.entityview.entityviewreact.entity.TestObjectDto;
 import org.brasbat.entityview.entityviewreact.repository.EmployeeRepository;
 import org.brasbat.entityview.entityviewreact.repository.EmployeeTwoRepository;
 import org.brasbat.entityview.entityviewreact.repository.TestColumnTypesRepository;
@@ -49,6 +50,11 @@ public class DemoData implements CommandLineRunner
             instance.add(Calendar.MINUTE, i + 1000);
             testColumnTypes.setTestDate(instance.getTime());
             testColumnTypes.setTestEnum(TestEnum.values()[i % TestEnum.values().length]);
+	        TestObjectDto dto = new TestObjectDto();
+	        dto.setActive(true);
+	        dto.setKey(5000+i);
+	        dto.setName("5000" + "bla");
+            testColumnTypes.setTestNestedObject(dto);
             testColumnTypesRepository.save(testColumnTypes);
         }
 
