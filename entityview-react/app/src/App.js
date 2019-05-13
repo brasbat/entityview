@@ -3,11 +3,12 @@ import './App.css';
 import 'react-widgets/dist/css/react-widgets.css';
 import axios from "axios";
 import LoadingOverlay from 'react-loading-overlay';
-import {Button, Col, Container, Form, Modal, Navbar, Row, Table, Spinner, DropdownButton, Dropdown} from 'react-bootstrap';
+import {Button, Col, Container, Form, Modal, Navbar, Row, Table, Spinner, DropdownButton, Dropdown, NavDropdown, Nav} from 'react-bootstrap';
 import {DateTimePicker} from 'react-widgets'
 import Moment from 'moment'
 import momentLocalizer from 'react-widgets-moment';
 import ReactNotification from "react-notifications-component";
+import { HashRouter, Route, Link} from 'react-router-dom'
 
 const baseUrl = reactIsInDevelomentMode() ? "http://localhost:8080" : window.location.origin;
 
@@ -35,18 +36,26 @@ class App extends Component {
 	render() {
 		return (
 				<div>
-					<Navbar expand="lg" variant="dark" bg="dark">
+					<Navbar sticky="top" expand="lg" variant="dark" bg="dark">
 						<Navbar.Brand href="#">Entity Viewer</Navbar.Brand>
+						<EntityChooser handler={this}/>
 					</Navbar>
 					<Container fluid={true}>
+						{/*<Row className="p-3">*/}
+							{/*<Col>*/}
+								{/*<EntityChooser handler={this}/>*/}
+							{/*</Col>*/}
+						{/*</Row>*/}
 						<Row className="p-3">
 							<Col>
-								<EntityChooser handler={this}/>
-							</Col>
-						</Row>
-						<Row className="p-3">
-							<Col>
-								<EntityTable ref={this.tableRef}/>
+								<HashRouter>
+									<div>
+										<Route path="/:name"   render={(props) => <EntityTable {...props} ref={this.tableRef} />} />
+										<Route exact path="/"   render={(props) => <EntityTable {...props} ref={this.tableRef} />} />
+									</div>
+								</HashRouter>
+
+								{/*<EntityTable ref={this.tableRef}/>*/}
 							</Col>
 						</Row>
 					</Container>
@@ -252,8 +261,23 @@ class EntityChooser
 					this.setState({entities: response.data});
 				})
 	}
-
 	render() {
+		var self = this;
+		return (
+				<Navbar.Collapse id="responsive-navbar-nav">
+				<Nav className="mr-auto">
+				<NavDropdown variant="dark" id="collasible-nav-dropdown" title={this.state.selected}>
+					{this.state.entities.map(function(d, idx) {
+						// eslint-disable-next-line
+						return (<NavDropdown.Item key={d} id={d} href={"#" + d} >{d}</NavDropdown.Item>
+						)
+					})}
+				</NavDropdown>
+				</Nav>
+				</Navbar.Collapse>
+		)
+	}
+	renderOld() {
 		var self = this;
 		return (
 
@@ -277,8 +301,17 @@ class EntityTable extends Component {
 		super(props);
 		this.state = {isLoading: false};
 		this.editRef = React.createRef();
+		console.log(this.props.match);
+		if(this.props.match != null){
+			this.updateShownEntity(this.props.match.params.name)
+		}
 	}
-
+	componentWillReceiveProps(nextProps) {
+		if(nextProps.match != null && nextProps.match.params.name != null)
+		{
+			this.updateShownEntity(nextProps.match.params.name);
+		}
+	}
 	refresh() {
 		if (this.state.entity != null) {
 			this.updateShownEntity(this.state.entity);
