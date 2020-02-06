@@ -9,8 +9,8 @@
 	<packaging>pom</packaging>
 	<version>1.0</version>
 	<modules>
-		<!--<module>entityview-spring</module>-->
-		<module>entityview-react</module>
+		<module>spring-boot-entityview</module>
+		<module>entityiew-demo</module>
 	</modules>
 
 
