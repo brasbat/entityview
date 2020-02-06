@@ -15,6 +15,7 @@ import java.util.stream.Collectors;
 import javax.annotation.PostConstruct;
 
 import org.apache.commons.collections.IteratorUtils;
+import org.brasbat.entityview.entityviewreact.service.EntityGraphService;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.ListableBeanFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -44,10 +45,12 @@ public class RepositioryInfoController
 
 	@Value("#{'${spring.entityview.disabled:}'.split(',')}")
 	private List<String> disabledEntities;
+	private final EntityGraphService entityGraphService;
 
-	public RepositioryInfoController(ListableBeanFactory listableBeanFactory)
+	public RepositioryInfoController(ListableBeanFactory listableBeanFactory, EntityGraphService entityGraphService)
 	{
 		this.repositories = new Repositories(listableBeanFactory);
+		this.entityGraphService = entityGraphService;
 	}
 
 	@PostConstruct
@@ -66,7 +69,11 @@ public class RepositioryInfoController
 			}
 		}
 	}
-
+	@GetMapping("graph")
+	public String getGraphviz()
+	{
+		return entityGraphService.buildGraphizDotModel();
+	}
 	@GetMapping("")
 	public List<String> getEntityNames()
 	{

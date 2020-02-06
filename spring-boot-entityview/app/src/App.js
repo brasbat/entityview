@@ -9,6 +9,7 @@ import Moment from 'moment'
 import momentLocalizer from 'react-widgets-moment';
 import ReactNotification from "react-notifications-component";
 import {HashRouter, Route, Link} from 'react-router-dom'
+import {Graphviz} from 'graphviz-react';
 
 const baseUrl = reactIsInDevelomentMode() ? "http://localhost:8080" : window.location.origin;
 
@@ -51,7 +52,7 @@ class App extends Component {
 								<HashRouter>
 									<div>
 										<Route path="/:name" render={(props) => <EntityTable {...props} ref={this.tableRef}/>}/>
-										<Route exact path="/" render={(props) => <EntityTable {...props} ref={this.tableRef}/>}/>
+										<Route exact path="/" render={(props) => <Graph dot=''/>}/>
 									</div>
 								</HashRouter>
 
@@ -67,6 +68,30 @@ class App extends Component {
 
 				</div>
 		);
+	}
+}
+
+class Graph extends Component {
+	constructor(props) {
+		super(props);
+		this.state = {dot: this.props.dot};
+	}
+
+	componentWillMount() {
+		axios
+				.get(baseUrl + "/entity/api/repository/graph")
+				.then(response => {
+
+					this.setState({dot: response.data});
+				})
+	}
+
+	render() {
+		if (this.state.dot == '') {
+			return <div></div>
+		} else {
+			return <Graphviz options={{height: "100%", width: "70%", zoom: true}} dot={this.state.dot}/>
+		}
 	}
 }
 
@@ -324,8 +349,7 @@ class EntityTable extends Component {
 	}
 
 	updateShownEntity(name) {
-		if(name == undefined)
-		{
+		if (name == undefined) {
 			return;
 		}
 		this.setState({isLoading: true, entity: name});

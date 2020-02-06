@@ -21,7 +21,8 @@
 		"react-scripts": "2.1.8",
 		"react-widgets": "^4.4.10",
 		"react-widgets-moment": "^4.0.26",
-		"reactstrap": "6.5.0"
+		"reactstrap": "6.5.0",
+		"graphviz-react": "^1.0.4"
 	},
 	"scripts": {
 		"start": "react-scripts start",
